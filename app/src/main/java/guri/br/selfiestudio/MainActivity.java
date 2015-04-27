@@ -96,7 +96,19 @@ public class MainActivity extends Activity {
                 if (mBluetoothAdapter.isEnabled()){
                     mArrayAdapter.clear();
                     mBluetoothAdapter.startDiscovery();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Turn the bluetooth on to discover devices.", Toast.LENGTH_SHORT).show();
                 }
+            }
+        });
+
+        //Enable visibility.
+        setVisible.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+                discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+                startActivity(discoverableIntent);
             }
         });
     }
@@ -140,6 +152,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        //Unregister the mReceiver.
         unregisterReceiver(mReceiver);
     }
 }

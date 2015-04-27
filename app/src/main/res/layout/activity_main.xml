@@ -18,6 +18,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Turn off"/>
+        <Button
+            android:id="@+id/visibility_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Set visible"/>
 
     </LinearLayout>
     <Button
@@ -30,11 +35,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Discovery"/>
-    <Button
-        android:id="@+id/visibility_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Set visible"/>
     <ListView
         android:id="@+id/devices_list_view"
         android:layout_width="match_parent"
