@@ -25,16 +25,21 @@
             android:text="Set visible"/>
 
     </LinearLayout>
-    <Button
-        android:id="@+id/paired_devices_button"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Paired devices"/>
-    <Button
-        android:id="@+id/discovery_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Discovery"/>
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/paired_devices_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Paired devices"/>
+        <Button
+            android:id="@+id/discovery_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Discovery"/>
+    </LinearLayout>
     <ListView
         android:id="@+id/devices_list_view"
         android:layout_width="match_parent"
