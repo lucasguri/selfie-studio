@@ -31,7 +31,6 @@ public class MainActivity extends Activity {
     //Declaring variables
     private static final int REQUEST_ENABLE_BT = 1;
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-    private static final String NAME = "";
     private BluetoothAdapter mBluetoothAdapter;
     public Button turnOn, turnOff, setVisible, discovery, showPairedDevices;
     public ListView listView;
@@ -175,11 +174,11 @@ public class MainActivity extends Activity {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         turnOn = (Button) findViewById(R.id.on_button);
         turnOff = (Button) findViewById(R.id.off_button);
-        showPairedDevices = (Button) findViewById(R.id.paired_devices_button);
         setVisible = (Button) findViewById(R.id.visibility_button);
         discovery = (Button) findViewById(R.id.discovery_button);
-        devices = new ArrayList<BluetoothDevice>();
         pairedDevices = mBluetoothAdapter.getBondedDevices();
+        showPairedDevices = (Button) findViewById(R.id.paired_devices_button);
+        devices = new ArrayList<BluetoothDevice>();
         listView = (ListView) findViewById(R.id.devices_list_view);
         mArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
         listView.setAdapter(mArrayAdapter);
@@ -221,6 +220,7 @@ public class MainActivity extends Activity {
     }
 
     private class AcceptThread extends Thread {
+        private static final String NAME = "";
         private final BluetoothServerSocket mmServerSocket;
 
         public AcceptThread() {
@@ -277,24 +277,28 @@ public class MainActivity extends Activity {
             // because mmSocket is final
             BluetoothSocket tmp = null;
             mmDevice = device;
-
+            Log.i("debugging", "construct");
             // Get a BluetoothSocket to connect with the given BluetoothDevice
             try {
                 // MY_UUID is the app's UUID string, also used by the server code
                 tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
-            } catch (IOException e) { }
+            } catch (IOException e) {
+                Log.i("debugging", e.getMessage());
+            }
             mmSocket = tmp;
         }
 
         public void run() {
             // Cancel discovery because it will slow down the connection
             mBluetoothAdapter.cancelDiscovery();
-
+            Log.i("debugging", "connect - run");
             try {
                 // Connect the device through the socket. This will block
                 // until it succeeds or throws an exception
                 mmSocket.connect();
+                Log.i("debugging", "connect - succeeded");
             } catch (IOException connectException) {
+                Log.i("debugging", connectException.getMessage());
                 // Unable to connect; close the socket and get out
                 try {
                     mmSocket.close();
@@ -307,6 +311,7 @@ public class MainActivity extends Activity {
         }
 
         private void manageConnectedSocket(BluetoothSocket mmSocket) {
+            mHandler.obtainMessage(SUCCESS_CONNECT, mmSocket).sendToTarget();
         }
 
         /** Will cancel an in-progress connection, and close the socket */
