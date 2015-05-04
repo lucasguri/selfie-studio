@@ -30,7 +30,7 @@ public class MainActivity extends Activity {
 
     //Declaring variables
     private static final int REQUEST_ENABLE_BT = 1;
-    private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+    private static final UUID MY_UUID = UUID.fromString("37877b80-ef9c-11e4-b80c-0800200c9a66");
     private BluetoothAdapter mBluetoothAdapter;
     public Button turnOn, turnOff, setVisible, discovery, showPairedDevices;
     public ListView listView;
@@ -40,6 +40,7 @@ public class MainActivity extends Activity {
     private BroadcastReceiver mReceiver;
     protected static final int SUCCESS_CONNECT = 0;
     protected static final int MESSAGE_READ = 1;
+    private static final String TAG = "debugging";
 
     Handler mHandler = new Handler(){
         @Override
@@ -138,9 +139,6 @@ public class MainActivity extends Activity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if(mBluetoothAdapter.isDiscovering()){
-                    mBluetoothAdapter.cancelDiscovery();
-                }
                 BluetoothDevice selectedDevice = devices.get(position);
                 ConnectThread connect = new ConnectThread(selectedDevice);
                 connect.start();
@@ -220,7 +218,7 @@ public class MainActivity extends Activity {
     }
 
     private class AcceptThread extends Thread {
-        private static final String NAME = "";
+        public static final String NAME = "SelfieStudio";
         private final BluetoothServerSocket mmServerSocket;
 
         public AcceptThread() {
@@ -230,7 +228,9 @@ public class MainActivity extends Activity {
             try {
                 // MY_UUID is the app's UUID string, also used by the client code
                 tmp = mBluetoothAdapter.listenUsingRfcommWithServiceRecord(NAME, MY_UUID);
-            } catch (IOException e) { }
+            } catch (IOException e) {
+                Log.i(TAG, e.getMessage());
+            }
             mmServerSocket = tmp;
         }
 
@@ -240,7 +240,10 @@ public class MainActivity extends Activity {
             while (true) {
                 try {
                     socket = mmServerSocket.accept();
+                    Log.i(TAG, "connection accepted");
                 } catch (IOException e) {
+                    Log.i(TAG, e.getMessage());
+                    Log.i(TAG, e.getMessage());
                     break;
                 }
                 // If a connection was accepted
@@ -249,7 +252,9 @@ public class MainActivity extends Activity {
                     manageConnectedSocket(socket);
                     try {
                         mmServerSocket.close();
+                        Log.i(TAG, "mmServerSocket closed");
                     } catch (IOException e) {
+                        Log.i(TAG, e.getMessage());
                         e.printStackTrace();
                     }
                     break;
@@ -264,7 +269,10 @@ public class MainActivity extends Activity {
         public void cancel() {
             try {
                 mmServerSocket.close();
-            } catch (IOException e) { }
+                Log.i(TAG, "mmServerSocket closed");
+            } catch (IOException e) {
+                Log.i(TAG, e.getMessage());
+            }
         }
     }
 
@@ -277,13 +285,13 @@ public class MainActivity extends Activity {
             // because mmSocket is final
             BluetoothSocket tmp = null;
             mmDevice = device;
-            Log.i("debugging", "construct");
+
             // Get a BluetoothSocket to connect with the given BluetoothDevice
             try {
                 // MY_UUID is the app's UUID string, also used by the server code
                 tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
             } catch (IOException e) {
-                Log.i("debugging", e.getMessage());
+                Log.i(TAG, e.getMessage());
             }
             mmSocket = tmp;
         }
@@ -291,18 +299,21 @@ public class MainActivity extends Activity {
         public void run() {
             // Cancel discovery because it will slow down the connection
             mBluetoothAdapter.cancelDiscovery();
-            Log.i("debugging", "connect - run");
+
             try {
                 // Connect the device through the socket. This will block
                 // until it succeeds or throws an exception
                 mmSocket.connect();
-                Log.i("debugging", "connect - succeeded");
+                Log.i(TAG, "mmSocket connected");
             } catch (IOException connectException) {
-                Log.i("debugging", connectException.getMessage());
+                Log.i(TAG, connectException.getMessage());
                 // Unable to connect; close the socket and get out
                 try {
                     mmSocket.close();
-                } catch (IOException closeException) { }
+                    Log.i(TAG, "mmSocket closed");
+                } catch (IOException closeException) {
+                    Log.i(TAG, closeException.getMessage());
+                }
                 return;
             }
 
@@ -310,16 +321,19 @@ public class MainActivity extends Activity {
             manageConnectedSocket(mmSocket);
         }
 
-        private void manageConnectedSocket(BluetoothSocket mmSocket) {
-            mHandler.obtainMessage(SUCCESS_CONNECT, mmSocket).sendToTarget();
-        }
-
         /** Will cancel an in-progress connection, and close the socket */
         public void cancel() {
             try {
                 mmSocket.close();
-            } catch (IOException e) { }
+                Log.i(TAG, "mmSocket.closed");
+            } catch (IOException e) {
+                Log.i(TAG, e.getMessage());
+            }
         }
+    }
+
+    private void manageConnectedSocket(BluetoothSocket mmSocket) {
+
     }
 
     private class ConnectedThread extends Thread {
@@ -344,19 +358,17 @@ public class MainActivity extends Activity {
         }
 
         public void run() {
-            byte[] buffer;  // buffer store for the stream
+            byte[] buffer = new byte[1024];  // buffer store for the stream
             int bytes; // bytes returned from read()
 
             // Keep listening to the InputStream until an exception occurs
             while (true) {
                 try {
                     // Read from the InputStream
-                    buffer = new byte[1024];
                     bytes = mmInStream.read(buffer);
                     // Send the obtained bytes to the UI activity
                     mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer)
                             .sendToTarget();
-
                 } catch (IOException e) {
                     break;
                 }
