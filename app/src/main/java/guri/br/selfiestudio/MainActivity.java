@@ -3,68 +3,46 @@ package guri.br.selfiestudio;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothServerSocket;
-import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+
 import java.util.ArrayList;
 import java.util.Set;
-import java.util.UUID;
 
 public class MainActivity extends Activity {
 
     //Declaring variables
     private static final int REQUEST_ENABLE_BT = 1;
+<<<<<<< HEAD
     private static final UUID MY_UUID = UUID.fromString("37877b80-ef9c-11e4-b80c-0800200c9a66");
     private BluetoothAdapter mBluetoothAdapter;
     public Button turnOn, turnOff, setVisible, discovery, showPairedDevices;
+=======
+
+    public static BluetoothAdapter mBluetoothAdapter;
+    public Button turnOn, turnOff, setVisible, discovery, showPairedDevices, btnCamera;
+>>>>>>> c6a1c2b70db3f1290a807c26995e1c2f48acdf77
     public ListView listView;
     private ArrayList<BluetoothDevice> devices;
     private Set<BluetoothDevice> pairedDevices;
     private ArrayAdapter mArrayAdapter;
     private BroadcastReceiver mReceiver;
+<<<<<<< HEAD
     protected static final int SUCCESS_CONNECT = 0;
     protected static final int MESSAGE_READ = 1;
     private static final String TAG = "debugging";
+=======
+>>>>>>> c6a1c2b70db3f1290a807c26995e1c2f48acdf77
 
-    Handler mHandler = new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-            // TODO Auto-generated method stub
-            Log.i("debugging", "in handler");
-            super.handleMessage(msg);
-            switch(msg.what){
-                case SUCCESS_CONNECT:
-                    // DO something
-                    ConnectedThread connectedThread = new ConnectedThread((BluetoothSocket)msg.obj);
-                    Toast.makeText(getApplicationContext(), "CONNECT", Toast.LENGTH_SHORT).show();
-                    String s = "successfully connected";
-                    connectedThread.write(s.getBytes());
-                    Log.i("debugging", "connected");
-                    break;
-                case MESSAGE_READ:
-                    byte[] readBuf = (byte[])msg.obj;
-                    String string = new String(readBuf);
-                    Toast.makeText(getApplicationContext(), string, Toast.LENGTH_SHORT).show();
-                    break;
-            }
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +52,13 @@ public class MainActivity extends Activity {
         //Initiate variables
         init();
 
+        btnCamera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), CameraActivity.class);
+                startActivity(intent);
+            }
+        });
         //Sets up bluetooth.
         turnOn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -174,6 +159,7 @@ public class MainActivity extends Activity {
         turnOff = (Button) findViewById(R.id.off_button);
         setVisible = (Button) findViewById(R.id.visibility_button);
         discovery = (Button) findViewById(R.id.discovery_button);
+        btnCamera = (Button) findViewById(R.id.btn_camera);
         pairedDevices = mBluetoothAdapter.getBondedDevices();
         showPairedDevices = (Button) findViewById(R.id.paired_devices_button);
         devices = new ArrayList<BluetoothDevice>();
@@ -199,9 +185,6 @@ public class MainActivity extends Activity {
                 }
                 else if(BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)){
                     // run some code
-
-
-
                 }
                 else if(BluetoothAdapter.ACTION_STATE_CHANGED.equals(action)){
                     if(mBluetoothAdapter.getState() == mBluetoothAdapter.STATE_OFF){
@@ -213,10 +196,9 @@ public class MainActivity extends Activity {
         // Register the BroadcastReceiver
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         registerReceiver(mReceiver, filter); // Don't forget to unregister during onDestroy
-
-
     }
 
+<<<<<<< HEAD
     private class AcceptThread extends Thread {
         public static final String NAME = "SelfieStudio";
         private final BluetoothServerSocket mmServerSocket;
@@ -389,11 +371,13 @@ public class MainActivity extends Activity {
             } catch (IOException e) { }
         }
     }
+=======
+
+>>>>>>> c6a1c2b70db3f1290a807c26995e1c2f48acdf77
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
         //Unregister the mReceiver.
         unregisterReceiver(mReceiver);
     }
