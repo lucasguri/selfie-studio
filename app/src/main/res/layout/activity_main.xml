@@ -46,13 +46,14 @@
             android:text="Camera"
             android:id="@+id/btn_camera" />
     </LinearLayout>
+    <Button
+        android:id="@+id/remote_camera"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Remote Camera"/>
     <ListView
         android:id="@+id/devices_list_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
-    <Button
-        android:id="@+id/remote_camera"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
 
 </LinearLayout>

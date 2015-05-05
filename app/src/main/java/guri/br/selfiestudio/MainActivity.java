@@ -44,6 +44,7 @@ public class MainActivity extends Activity {
     private static final String TAG = "debugging";
     private ConnectedThread connectedThread;
     private static final String ACTIVE_CAMERA = "1";
+    private AcceptThread acceptThread = null;
 
     public Handler mHandler = new Handler(){
         @Override
@@ -77,8 +78,7 @@ public class MainActivity extends Activity {
         //Initiate variables
         init();
 
-        AcceptThread acceptThread = new AcceptThread();
-        acceptThread.start();
+        startAcceptThread();
 
         btnCamera.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -107,35 +107,14 @@ public class MainActivity extends Activity {
         showPairedDevices.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mBluetoothAdapter.isEnabled()){
-                    mArrayAdapter.clear();
-                    // If there are paired devices
-                    if (pairedDevices.size() > 0) {
-                        // Loop through paired devices
-                        for (BluetoothDevice device : pairedDevices) {
-                            // Add the name and address to an array adapter to show in a ListView
-                            mArrayAdapter.add(device.getName() + "\n" + device.getAddress());
-                        }
-                    } else {
-                        Toast.makeText(getApplicationContext(), "There are no paired devices", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(getApplicationContext(), "Bluetooth is off", Toast.LENGTH_SHORT).show();
-                }
-
+                showPairedDevices();
             }
         });
 
         discovery.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mBluetoothAdapter.isEnabled()){
-                    mArrayAdapter.clear();
-                    if (!mBluetoothAdapter.isDiscovering()) mBluetoothAdapter.startDiscovery();
-                    Toast.makeText(getApplicationContext(), "Searching for devices...", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "Turn the bluetooth on to discover devices.", Toast.LENGTH_SHORT).show();
-                }
+                showDiscoveredDevices();
             }
         });
 
@@ -143,9 +122,7 @@ public class MainActivity extends Activity {
         setVisible.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-                discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
-                startActivity(discoverableIntent);
+                setBluetoothVisible();
             }
         });
 
@@ -166,6 +143,52 @@ public class MainActivity extends Activity {
                 Toast.makeText(getApplicationContext(), selectedDevice.toString() , Toast.LENGTH_SHORT).show();
             }
         });
+
+    }
+
+    private void setBluetoothVisible() {
+        Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+        startActivity(discoverableIntent);
+    }
+
+    private void showDiscoveredDevices() {
+        if (mBluetoothAdapter.isEnabled()){
+            devices.clear();
+            mArrayAdapter.clear();
+            if (!mBluetoothAdapter.isDiscovering()) mBluetoothAdapter.startDiscovery();
+            Toast.makeText(getApplicationContext(), "Searching for devices...", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(getApplicationContext(), "Turn the bluetooth on to discover devices.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showPairedDevices() {
+        pairedDevices = mBluetoothAdapter.getBondedDevices();
+        if (mBluetoothAdapter.isEnabled()){
+            devices.clear();
+            mArrayAdapter.clear();
+            // If there are paired devices
+            if (pairedDevices.size() > 0) {
+                // Loop through paired devices
+                for (BluetoothDevice device : pairedDevices) {
+                    devices.add(device);
+                    // Add the name and address to an array adapter to show in a ListView
+                    mArrayAdapter.add(device.getName() + "\n" + device.getAddress());
+                }
+            } else {
+                Toast.makeText(getApplicationContext(), "There are no paired devices", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Toast.makeText(getApplicationContext(), "Bluetooth is off", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void startAcceptThread() {
+        if (mBluetoothAdapter.isEnabled()){
+            acceptThread = new AcceptThread();
+            acceptThread.start();
+        }
     }
 
     private void turnOffBt() {
@@ -184,6 +207,9 @@ public class MainActivity extends Activity {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
+        startAcceptThread();
+
+
     }
 
     /**
