@@ -44,7 +44,7 @@ public class MainActivity extends Activity {
     private static final String TAG = "debugging";
     private ConnectedThread connectedThread;
     private static final String ACTIVE_CAMERA = "1";
-    private AcceptThread acceptThread = null;
+    private AcceptThread acceptThread;
 
     public Handler mHandler = new Handler(){
         @Override
@@ -207,9 +207,12 @@ public class MainActivity extends Activity {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
-        startAcceptThread();
-
-
+        while (true){
+            if (mBluetoothAdapter.isEnabled()){
+                startAcceptThread();
+                break;
+            }
+        }
     }
 
     /**
