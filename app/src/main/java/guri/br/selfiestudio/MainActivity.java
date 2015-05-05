@@ -3,11 +3,16 @@ package guri.br.selfiestudio;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -15,34 +20,54 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.UUID;
 
 public class MainActivity extends Activity {
 
     //Declaring variables
     private static final int REQUEST_ENABLE_BT = 1;
-<<<<<<< HEAD
     private static final UUID MY_UUID = UUID.fromString("37877b80-ef9c-11e4-b80c-0800200c9a66");
     private BluetoothAdapter mBluetoothAdapter;
-    public Button turnOn, turnOff, setVisible, discovery, showPairedDevices;
-=======
-
-    public static BluetoothAdapter mBluetoothAdapter;
-    public Button turnOn, turnOff, setVisible, discovery, showPairedDevices, btnCamera;
->>>>>>> c6a1c2b70db3f1290a807c26995e1c2f48acdf77
+    public Button turnOn, turnOff, setVisible, discovery, showPairedDevices, btnCamera, btnRemoteCamera;
     public ListView listView;
     private ArrayList<BluetoothDevice> devices;
     private Set<BluetoothDevice> pairedDevices;
     private ArrayAdapter mArrayAdapter;
     private BroadcastReceiver mReceiver;
-<<<<<<< HEAD
     protected static final int SUCCESS_CONNECT = 0;
     protected static final int MESSAGE_READ = 1;
     private static final String TAG = "debugging";
-=======
->>>>>>> c6a1c2b70db3f1290a807c26995e1c2f48acdf77
+    private ConnectedThread connectedThread;
+    private static final String ACTIVE_CAMERA = "1";
 
+    public Handler mHandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            // TODO Auto-generated method stub
+            Log.i("debugging", "in handler");
+            super.handleMessage(msg);
+            switch(msg.what){
+                case SUCCESS_CONNECT:
+                    // DO something
+                    ConnectedThread connectedThread = new ConnectedThread((BluetoothSocket)msg.obj);
+                    Toast.makeText(getApplicationContext(), "CONNECT", Toast.LENGTH_SHORT).show();
+                    String s = "successfully connected";
+                    //connectedThread.write(s.getBytes());
+                    Log.i("debugging", "connected");
+                    break;
+                case MESSAGE_READ:
+                    byte[] readBuf = (byte[])msg.obj;
+                    String string = new String(readBuf);
+                    Toast.makeText(getApplicationContext(), string, Toast.LENGTH_SHORT).show();
+                    break;
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +76,9 @@ public class MainActivity extends Activity {
 
         //Initiate variables
         init();
+
+        AcceptThread acceptThread = new AcceptThread();
+        acceptThread.start();
 
         btnCamera.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -121,6 +149,14 @@ public class MainActivity extends Activity {
             }
         });
 
+        btnRemoteCamera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startCamera();
+
+            }
+        });
+
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -166,6 +202,7 @@ public class MainActivity extends Activity {
         listView = (ListView) findViewById(R.id.devices_list_view);
         mArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
         listView.setAdapter(mArrayAdapter);
+        btnRemoteCamera = (Button) findViewById(R.id.remote_camera);
 
         // Create a BroadcastReceiver for ACTION_FOUND
         mReceiver = new BroadcastReceiver() {
@@ -198,7 +235,6 @@ public class MainActivity extends Activity {
         registerReceiver(mReceiver, filter); // Don't forget to unregister during onDestroy
     }
 
-<<<<<<< HEAD
     private class AcceptThread extends Thread {
         public static final String NAME = "SelfieStudio";
         private final BluetoothServerSocket mmServerSocket;
@@ -234,6 +270,8 @@ public class MainActivity extends Activity {
                     manageConnectedSocket(socket);
                     try {
                         mmServerSocket.close();
+                        // TODO
+
                         Log.i(TAG, "mmServerSocket closed");
                     } catch (IOException e) {
                         Log.i(TAG, e.getMessage());
@@ -281,7 +319,10 @@ public class MainActivity extends Activity {
         public void run() {
             // Cancel discovery because it will slow down the connection
             mBluetoothAdapter.cancelDiscovery();
-
+            Message m = new Message();
+            m.what = SUCCESS_CONNECT;
+            m.obj = mmSocket;
+            mHandler.sendMessage(m);
             try {
                 // Connect the device through the socket. This will block
                 // until it succeeds or throws an exception
@@ -300,7 +341,7 @@ public class MainActivity extends Activity {
             }
 
             // Do work to manage the connection (in a separate thread)
-            manageConnectedSocket(mmSocket);
+            //manageConnectedSocket(mmSocket);
         }
 
         /** Will cancel an in-progress connection, and close the socket */
@@ -315,7 +356,8 @@ public class MainActivity extends Activity {
     }
 
     private void manageConnectedSocket(BluetoothSocket mmSocket) {
-
+        connectedThread = new ConnectedThread(mmSocket);
+        connectedThread.start();
     }
 
     private class ConnectedThread extends Thread {
@@ -348,6 +390,10 @@ public class MainActivity extends Activity {
                 try {
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);
+                    if (bytes == Integer.parseInt(ACTIVE_CAMERA)){
+
+                    }
+                    Log.i("listen", String.valueOf(bytes));
                     // Send the obtained bytes to the UI activity
                     mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer)
                             .sendToTarget();
@@ -371,9 +417,11 @@ public class MainActivity extends Activity {
             } catch (IOException e) { }
         }
     }
-=======
 
->>>>>>> c6a1c2b70db3f1290a807c26995e1c2f48acdf77
+    public void startCamera() {
+        Intent intent = new Intent(getApplicationContext(), CameraActivity.class);
+        startActivity(intent);
+    }
 
     @Override
     protected void onDestroy() {
