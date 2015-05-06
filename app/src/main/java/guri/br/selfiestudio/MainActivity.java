@@ -19,7 +19,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -41,30 +40,32 @@ public class MainActivity extends Activity {
     private BroadcastReceiver mReceiver;
     protected static final int SUCCESS_CONNECT = 0;
     protected static final int MESSAGE_READ = 1;
+    protected static final int REMOTE_CAMERA = -1;
     private static final String TAG = "debugging";
     private ConnectedThread connectedThread;
     private static final String ACTIVE_CAMERA = "1";
     private AcceptThread acceptThread;
 
-    public Handler mHandler = new Handler(){
+    Handler mHandler = new Handler(){
         @Override
         public void handleMessage(Message msg) {
             // TODO Auto-generated method stub
-            Log.i("debugging", "in handler");
+            Log.i(TAG, "in handler");
             super.handleMessage(msg);
+            String s = "";
             switch(msg.what){
                 case SUCCESS_CONNECT:
                     // DO something
-                    ConnectedThread connectedThread = new ConnectedThread((BluetoothSocket)msg.obj);
                     Toast.makeText(getApplicationContext(), "CONNECT", Toast.LENGTH_SHORT).show();
-                    String s = "successfully connected";
-                    //connectedThread.write(s.getBytes());
-                    Log.i("debugging", "connected");
+                    s = "successfully connected";
+                    connectedThread.write(s.getBytes());
+                    Log.i(TAG, "connected");
                     break;
                 case MESSAGE_READ:
-                    byte[] readBuf = (byte[])msg.obj;
+                    byte[] readBuf = (byte[]) msg.obj;
                     String string = new String(readBuf);
                     Toast.makeText(getApplicationContext(), string, Toast.LENGTH_SHORT).show();
+                    startCamera();
                     break;
             }
         }
@@ -129,7 +130,7 @@ public class MainActivity extends Activity {
         btnRemoteCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startCamera();
+                mHandler.obtainMessage(REMOTE_CAMERA).sendToTarget();
 
             }
         });
@@ -312,6 +313,8 @@ public class MainActivity extends Activity {
         }
 
         private void manageConnectedSocket(BluetoothSocket socket) {
+            ConnectedThread connectedThread = new ConnectedThread(socket);
+            connectedThread.start();
         }
 
         /** Will cancel the listening socket, and cause the thread to finish */
@@ -348,29 +351,23 @@ public class MainActivity extends Activity {
         public void run() {
             // Cancel discovery because it will slow down the connection
             mBluetoothAdapter.cancelDiscovery();
-            Message m = new Message();
-            m.what = SUCCESS_CONNECT;
-            m.obj = mmSocket;
-            mHandler.sendMessage(m);
+
             try {
                 // Connect the device through the socket. This will block
                 // until it succeeds or throws an exception
                 mmSocket.connect();
-                Log.i(TAG, "mmSocket connected");
             } catch (IOException connectException) {
-                Log.i(TAG, connectException.getMessage());
                 // Unable to connect; close the socket and get out
                 try {
                     mmSocket.close();
-                    Log.i(TAG, "mmSocket closed");
-                } catch (IOException closeException) {
-                    Log.i(TAG, closeException.getMessage());
-                }
+                } catch (IOException closeException) { }
                 return;
             }
 
             // Do work to manage the connection (in a separate thread)
             //manageConnectedSocket(mmSocket);
+            connectedThread = new ConnectedThread(mmSocket);
+            mHandler.obtainMessage(SUCCESS_CONNECT, mmSocket).sendToTarget();
         }
 
         /** Will cancel an in-progress connection, and close the socket */
@@ -385,8 +382,10 @@ public class MainActivity extends Activity {
     }
 
     private void manageConnectedSocket(BluetoothSocket mmSocket) {
-        connectedThread = new ConnectedThread(mmSocket);
+        ConnectedThread connectedThread = new ConnectedThread(mmSocket);
         connectedThread.start();
+        connectedThread.checkAccess();
+
     }
 
     private class ConnectedThread extends Thread {
@@ -419,10 +418,6 @@ public class MainActivity extends Activity {
                 try {
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);
-                    if (bytes == Integer.parseInt(ACTIVE_CAMERA)){
-
-                    }
-                    Log.i("listen", String.valueOf(bytes));
                     // Send the obtained bytes to the UI activity
                     mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer)
                             .sendToTarget();
@@ -448,8 +443,21 @@ public class MainActivity extends Activity {
     }
 
     public void startCamera() {
-        Intent intent = new Intent(getApplicationContext(), CameraActivity.class);
-        startActivity(intent);
+        //Intent intent = new Intent(getApplicationContext(), CameraActivity.class);
+        //startActivity(intent);
+        Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
+        startActivityForResult(intent, 1);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (resultCode){
+            case  RESULT_OK:
+                break;
+            case RESULT_CANCELED:
+                break;
+        }
     }
 
     @Override
