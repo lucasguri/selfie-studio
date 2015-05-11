@@ -2,58 +2,13 @@
     android:layout_height="match_parent"
     android:layout_width="match_parent"
     android:orientation="vertical"
-    >
-    <LinearLayout
+    android:gravity="center">
+
+    <ImageView
+        android:id="@+id/take_picture"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/on_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Turn on"/>
-        <Button
-            android:id="@+id/off_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Turn off"/>
-        <Button
-            android:id="@+id/visibility_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Set visible"/>
-
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <Button
-            android:id="@+id/paired_devices_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Paired devices"/>
-        <Button
-            android:id="@+id/discovery_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Discovery"/>
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Camera"
-            android:id="@+id/btn_camera" />
-    </LinearLayout>
-    <Button
-        android:id="@+id/remote_camera"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Remote Camera"/>
-    <ListView
-        android:id="@+id/devices_list_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:src="@drawable/take_picture"
+        android:clickable="true"/>
 
 </LinearLayout>
