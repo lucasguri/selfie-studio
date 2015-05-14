@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -250,6 +251,9 @@ public class MainActivity extends ActionBarActivity
                         listenUsingRfcommWithServiceRecord(SERVICO, MEU_UUID);//abre o socketServidor
                 clientSocket = serverSocket.accept();
                 trataSocket(clientSocket);
+                Intent it = new Intent(getApplicationContext(), CameraActivity.class);
+                startActivity(it);
+
             } catch (IOException e) {
                 mTelaHandler.obtainMessage(MSG_DESCONECTOU, e.getMessage() + "[1]").sendToTarget();
                 e.printStackTrace();
@@ -361,7 +365,10 @@ public class MainActivity extends ActionBarActivity
                 case MSG_TEXTO:
                     //mMensagens.add(msg.obj.toString());
                     //mMensagens.notifyDataSetChanged();
+
                     Toast.makeText(getApplicationContext(), msg.obj.toString(), Toast.LENGTH_SHORT).show();
+                    CameraActivity.buttonTakePicture.performClick();
+
 
                 case MSG_DESCONECTOU:
                     Toast.makeText(MainActivity.this,

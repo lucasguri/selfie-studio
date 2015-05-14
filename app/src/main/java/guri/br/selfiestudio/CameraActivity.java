@@ -9,6 +9,7 @@ import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.ShutterCallback;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -18,18 +19,21 @@ import android.widget.Button;
 
 import java.io.IOException;
 
-public class CameraActivity extends Activity implements SurfaceHolder.Callback{
+public class CameraActivity extends Activity implements SurfaceHolder.Callback {
 
     Camera camera;
     SurfaceView surfaceView;
     SurfaceHolder surfaceHolder;
     boolean previewing = false;
     LayoutInflater controlInflater = null;
+    public static Button buttonTakePicture;
+
 
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_android_camera);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
@@ -46,9 +50,8 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback{
                 LayoutParams.FILL_PARENT);
         this.addContentView(viewControl, layoutParamsControl);
 
-        Button buttonTakePicture = (Button)findViewById(R.id.takepicture);
+        buttonTakePicture = (Button)findViewById(R.id.takepicture);
         buttonTakePicture.setOnClickListener(new Button.OnClickListener(){
-
             @Override
             public void onClick(View arg0) {
                 // TODO Auto-generated method stub
@@ -116,5 +119,9 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback{
         camera.release();
         camera = null;
         previewing = false;
+    }
+
+    public interface InternetStateListener {
+        public void onStateChange();
     }
 }
