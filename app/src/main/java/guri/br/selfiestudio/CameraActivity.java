@@ -55,6 +55,9 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
             @Override
             public void onClick(View arg0) {
                 // TODO Auto-generated method stub
+                Camera.Parameters p = camera.getParameters();
+                p.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
+                camera.setParameters(p);
                 camera.takePicture(myShutterCallback,
                         myPictureCallback_RAW, myPictureCallback_JPG);
             }});
@@ -96,6 +99,11 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
 
         if (camera != null){
             try {
+                //flash
+                /*Camera.Parameters p = camera.getParameters();
+                p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+                camera.setParameters(p);*/
+                //flash fim
                 camera.setPreviewDisplay(surfaceHolder);
                 camera.startPreview();
                 previewing = true;
