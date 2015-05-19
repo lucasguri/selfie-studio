@@ -177,10 +177,12 @@ public class MainActivity extends ActionBarActivity
         //EditText edt = (EditText) findViewById(R.id.edtMsg);
         //String msg = edt.getText().toString();
         //edt.setText("");
-        String msg = "take_picture";
+        Integer msg = -1;
+        byte[] arrayBytes = new byte[1];
         try {
             if (os != null) {
-                os.writeUTF(msg);
+                arrayBytes[0] = msg.byteValue();
+                os.write(arrayBytes);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -311,10 +313,16 @@ public class MainActivity extends ActionBarActivity
                 nome = socket.getRemoteDevice().getName();
                 is = new DataInputStream(socket.getInputStream());
                 os =new DataOutputStream(socket.getOutputStream());
-                String string;
+                byte[] buffer = new byte[3072];
+                int mbyte;
                 while (true) {
-                    string = is.readUTF();
-                    mTelaHandler.obtainMessage(MSG_TEXTO, nome + ": " + string).sendToTarget();
+                    mbyte = is.read(buffer);
+                    if ((int)buffer[0] == -1){
+                        //Tira foto
+                    } else {
+                        //Recebe foto
+                    }
+                    //mTelaHandler.obtainMessage(MSG_TEXTO, nome + ": " + string).sendToTarget();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -368,12 +376,15 @@ public class MainActivity extends ActionBarActivity
 
                     Toast.makeText(getApplicationContext(), msg.obj.toString(), Toast.LENGTH_SHORT).show();
                     CameraActivity.buttonTakePicture.performClick();
-
-
+                    break;
+                //case RECEBER_FOTO:
+                 //   //salvar os bytes da foto na galeria e exibir em um imageview
+                 //   break;
                 case MSG_DESCONECTOU:
                     Toast.makeText(MainActivity.this,
                             getString(R.string.msg_desconectou) + msg.obj.toString(),
                             Toast.LENGTH_SHORT).show();
+                    break;
             }
         }
     }
