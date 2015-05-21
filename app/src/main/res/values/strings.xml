@@ -16,7 +16,7 @@
     <string name="aparelhos_encontrados">Aparelhos encontrados</string>
     <string name="aguarde">Aguarde</string>
     <string name="mensagem_servidor">Aguardando por conexões...</string>
-    <string name="msg_desconectou">Desconectou</string>
+    <string name="msg_desconectou">Conexão encerrada</string>
     <string name="title_activity_lista_devices">ListaDevices</string>
 
 </resources>

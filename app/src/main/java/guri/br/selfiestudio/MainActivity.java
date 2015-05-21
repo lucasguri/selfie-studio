@@ -11,7 +11,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.media.Image;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -33,6 +33,8 @@ public class MainActivity extends ActionBarActivity
         implements View.OnClickListener, DialogInterface.OnClickListener,
         DialogInterface.OnCancelListener {
 
+    private static final String TAG = "info";
+
     private static final String SERVICO = "DominandoChat";
     private static final UUID MEU_UUID =
             UUID.fromString("37877b80-ef9c-11e4-b80c-0800200c9a66");
@@ -40,7 +42,7 @@ public class MainActivity extends ActionBarActivity
     private static final int BT_ATIVAR = 0;
     private static final int BT_VISIVEL = 1;
 
-    private static final int MSG_TEXTO = 0;
+    private static final int TIRAR_FOTO = 0;
     private static final int MSG_DESCONECTOU = 2;
 
     private ThreadServidor mThreadServidor;
@@ -62,6 +64,7 @@ public class MainActivity extends ActionBarActivity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         mTelaHandler = new TelaHandler();
 
@@ -177,12 +180,10 @@ public class MainActivity extends ActionBarActivity
         //EditText edt = (EditText) findViewById(R.id.edtMsg);
         //String msg = edt.getText().toString();
         //edt.setText("");
-        Integer msg = -1;
-        byte[] arrayBytes = new byte[1];
+        String msg = "take_picture";
         try {
             if (os != null) {
-                arrayBytes[0] = msg.byteValue();
-                os.write(arrayBytes);
+                os.writeUTF(msg);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -257,8 +258,9 @@ public class MainActivity extends ActionBarActivity
                 startActivity(it);
 
             } catch (IOException e) {
-                mTelaHandler.obtainMessage(MSG_DESCONECTOU, e.getMessage() + "[1]").sendToTarget();
+                mTelaHandler.obtainMessage(MSG_DESCONECTOU, "Nenhum pedido de conexão foi recebido.").sendToTarget();
                 e.printStackTrace();
+                Log.i(TAG, e.getMessage() + " ThreadServidor: Não conectou");
             }
         }
 
@@ -286,7 +288,8 @@ public class MainActivity extends ActionBarActivity
                 trataSocket(socket);
             } catch (IOException e) {
                 e.printStackTrace();
-                mTelaHandler.obtainMessage(MSG_DESCONECTOU, e.getMessage() + "[2]").sendToTarget();
+                mTelaHandler.obtainMessage(MSG_DESCONECTOU, "Dispositivo remoto não encontrado.").sendToTarget();
+                Log.i(TAG,e.getMessage() + " ThreadCliente: Não conectou.");
             }
         }
 
@@ -313,22 +316,15 @@ public class MainActivity extends ActionBarActivity
                 nome = socket.getRemoteDevice().getName();
                 is = new DataInputStream(socket.getInputStream());
                 os =new DataOutputStream(socket.getOutputStream());
-                byte[] buffer = new byte[3072];
-                int mbyte;
+                String string;
                 while (true) {
-                    mbyte = is.read(buffer);
-                    if ((int)buffer[0] == -1){
-                        //Tira foto
-                    } else {
-                        //Recebe foto
-                    }
-                    //mTelaHandler.obtainMessage(MSG_TEXTO, nome + ": " + string).sendToTarget();
+                    string = is.readUTF();
+                    mTelaHandler.obtainMessage(TIRAR_FOTO, nome + ": " + string).sendToTarget();
                 }
             } catch (IOException e) {
-                //e.printStackTrace();
-                Log.d("pers", e.getMessage());
-                mTelaHandler.obtainMessage(MSG_DESCONECTOU,
-                        e.getMessage() + "[3]").sendToTarget();
+                e.printStackTrace();
+                mTelaHandler.obtainMessage(MSG_DESCONECTOU, "A conexão foi perdida.").sendToTarget();
+                Log.i(TAG, e.getMessage() + "ThreadComunicação: Desconectou.");
             }
         }
 
@@ -371,25 +367,23 @@ public class MainActivity extends ActionBarActivity
             super.handleMessage(msg);
 
             switch (msg.what){
-                case MSG_TEXTO:
+                case TIRAR_FOTO:
                     //mMensagens.add(msg.obj.toString());
                     //mMensagens.notifyDataSetChanged();
 
                     Toast.makeText(getApplicationContext(), msg.obj.toString(), Toast.LENGTH_SHORT).show();
                     CameraActivity.buttonTakePicture.performClick();
-<<<<<<< HEAD
+
                     //CameraActivity.persistImage();
 
 
-=======
+
                     break;
                 //case RECEBER_FOTO:
                  //   //salvar os bytes da foto na galeria e exibir em um imageview
                  //   break;
->>>>>>> b3ddee31a58794f8e36665627263e013d4935364
                 case MSG_DESCONECTOU:
-                    Toast.makeText(MainActivity.this,
-                            getString(R.string.msg_desconectou) + msg.obj.toString(),
+                    Toast.makeText(MainActivity.this, getString(R.string.msg_desconectou) + ": " + msg.obj.toString(),
                             Toast.LENGTH_SHORT).show();
                     break;
             }

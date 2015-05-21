@@ -111,7 +111,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
             Bitmap bitmap = BitmapFactory.decodeByteArray(arg0, 0, arg0.length);
             if (isExternalStorageWritable()) {
                 File f = getAlbumStorageDir("");
-                File myExternalFile = new File(f, "teste3.png");
+                File myExternalFile = new File(f, "teste3.jpg");
                 try {
                     FileOutputStream fos = new FileOutputStream(myExternalFile);
                     fos.write(arg0);
