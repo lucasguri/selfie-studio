@@ -1,6 +1,9 @@
 package guri.br.selfiestudio;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.ContextWrapper;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -8,7 +11,9 @@ import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.ShutterCallback;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
@@ -16,8 +21,14 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
+import android.widget.ImageView;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class CameraActivity extends Activity implements SurfaceHolder.Callback {
 
@@ -63,6 +74,19 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
             }});
     }
 
+    /*protected void onPause() {
+        super.onPause();
+        releaseCamera();
+    }
+
+    private void releaseCamera(){
+        if (camera != null){
+            camera.release();
+            //camera = null;
+        }
+    }*/
+
+
     ShutterCallback myShutterCallback = new ShutterCallback(){
 
         @Override
@@ -75,18 +99,52 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
 
         @Override
         public void onPictureTaken(byte[] arg0, Camera arg1) {
-            // TODO Auto-generated method stub
-
+            Log.d("IMGGG", String.valueOf(arg0));
+            //Bitmap bitmap = BitmapFactory.decodeByteArray(arg0, 0, arg0.length);
+            //Log.d("IMAGEMM" , String.valueOf(bitmap.getWidth()) + String.valueOf(bitmap.getHeight()));
         }};
 
     PictureCallback myPictureCallback_JPG = new PictureCallback(){
 
         @Override
         public void onPictureTaken(byte[] arg0, Camera arg1) {
+            Bitmap bitmap = BitmapFactory.decodeByteArray(arg0, 0, arg0.length);
+            if (isExternalStorageWritable()) {
+                File f = getAlbumStorageDir("");
+                File myExternalFile = new File(f, "teste3.png");
+                try {
+                    FileOutputStream fos = new FileOutputStream(myExternalFile);
+                    fos.write(arg0);
+                    fos.close();
+                    Intent mediaScan = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                    mediaScan.setDataAndType(Uri.parse(myExternalFile.getPath()), "image/*");
+                    sendBroadcast(mediaScan);
+                } catch (IOException e) {
+                    Log.e("ERRO AO SALVAR ARQUIVO", e.getMessage());
+                }
+            }
+
+            //Log.d("IMAGEMM" , String.valueOf(bitmap.getWidth()) + String.valueOf(bitmap.getHeight()));
             // TODO Auto-generated method stub
-            Bitmap bitmapPicture
-                    = BitmapFactory.decodeByteArray(arg0, 0, arg0.length);
         }};
+
+    public boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    public File getAlbumStorageDir(String albumName) {
+        // Get the directory for the user's public pictures directory.
+        File file = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES), albumName);
+        if (!file.mkdirs()) {
+            Log.e("DIRECTORYYY", "Directory not created");
+        }
+        return file;
+    }
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width,
@@ -99,11 +157,6 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
 
         if (camera != null){
             try {
-                //flash
-                /*Camera.Parameters p = camera.getParameters();
-                p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-                camera.setParameters(p);*/
-                //flash fim
                 camera.setPreviewDisplay(surfaceHolder);
                 camera.startPreview();
                 previewing = true;
@@ -123,9 +176,12 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         // TODO Auto-generated method stub
-        camera.stopPreview();
-        camera.release();
-        camera = null;
+        //if (camera != null) {
+            camera.stopPreview();
+            camera.release();
+            camera = null;
+        //}
+
         previewing = false;
     }
 

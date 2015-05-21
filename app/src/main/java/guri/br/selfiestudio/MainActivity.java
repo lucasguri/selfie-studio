@@ -325,7 +325,8 @@ public class MainActivity extends ActionBarActivity
                     //mTelaHandler.obtainMessage(MSG_TEXTO, nome + ": " + string).sendToTarget();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
+                Log.d("pers", e.getMessage());
                 mTelaHandler.obtainMessage(MSG_DESCONECTOU,
                         e.getMessage() + "[3]").sendToTarget();
             }
@@ -376,10 +377,16 @@ public class MainActivity extends ActionBarActivity
 
                     Toast.makeText(getApplicationContext(), msg.obj.toString(), Toast.LENGTH_SHORT).show();
                     CameraActivity.buttonTakePicture.performClick();
+<<<<<<< HEAD
+                    //CameraActivity.persistImage();
+
+
+=======
                     break;
                 //case RECEBER_FOTO:
                  //   //salvar os bytes da foto na galeria e exibir em um imageview
                  //   break;
+>>>>>>> b3ddee31a58794f8e36665627263e013d4935364
                 case MSG_DESCONECTOU:
                     Toast.makeText(MainActivity.this,
                             getString(R.string.msg_desconectou) + msg.obj.toString(),
