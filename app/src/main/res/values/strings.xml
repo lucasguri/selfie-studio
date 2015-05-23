@@ -18,5 +18,6 @@
     <string name="mensagem_servidor">Aguardando por conexões...</string>
     <string name="msg_desconectou">Conexão encerrada</string>
     <string name="title_activity_lista_devices">ListaDevices</string>
+    <string name="erro_save_image">Não foi possível salvar a imagem</string>
 
 </resources>

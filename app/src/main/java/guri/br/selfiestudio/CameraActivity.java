@@ -1,5 +1,6 @@
 package guri.br.selfiestudio;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
@@ -12,6 +13,7 @@ import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.ShutterCallback;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -22,8 +24,10 @@ import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.io.ByteArrayInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -99,9 +103,6 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
 
         @Override
         public void onPictureTaken(byte[] arg0, Camera arg1) {
-            Log.d("IMGGG", String.valueOf(arg0));
-            //Bitmap bitmap = BitmapFactory.decodeByteArray(arg0, 0, arg0.length);
-            //Log.d("IMAGEMM" , String.valueOf(bitmap.getWidth()) + String.valueOf(bitmap.getHeight()));
         }};
 
     PictureCallback myPictureCallback_JPG = new PictureCallback(){
@@ -113,19 +114,22 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                 File f = getAlbumStorageDir("");
                 File myExternalFile = new File(f, "teste3.jpg");
                 try {
+                    // salvando a foto no storage
                     FileOutputStream fos = new FileOutputStream(myExternalFile);
                     fos.write(arg0);
                     fos.close();
                     Intent mediaScan = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                     mediaScan.setDataAndType(Uri.parse(myExternalFile.getPath()), "image/*");
                     sendBroadcast(mediaScan);
+                    // escrevendo o array de bytes da foto pelo outputstream
+                    DataOutputStream os = MainActivity.mThreadComunicacao.getOutputStream();
+                    os.write(arg0);
                 } catch (IOException e) {
+                    Toast.makeText(getApplicationContext(),
+                            getString(R.string.erro_save_image), Toast.LENGTH_SHORT);
                     Log.e("ERRO AO SALVAR ARQUIVO", e.getMessage());
                 }
             }
-
-            //Log.d("IMAGEMM" , String.valueOf(bitmap.getWidth()) + String.valueOf(bitmap.getHeight()));
-            // TODO Auto-generated method stub
         }};
 
     public boolean isExternalStorageWritable() {
@@ -136,7 +140,8 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
         return false;
     }
 
-    public File getAlbumStorageDir(String albumName) {
+    @TargetApi(Build.VERSION_CODES.FROYO)
+    public static File getAlbumStorageDir(String albumName) {
         // Get the directory for the user's public pictures directory.
         File file = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES), albumName);
@@ -183,9 +188,5 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
         //}
 
         previewing = false;
-    }
-
-    public interface InternetStateListener {
-        public void onStateChange();
     }
 }

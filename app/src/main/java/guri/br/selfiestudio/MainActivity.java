@@ -1,5 +1,6 @@
 package guri.br.selfiestudio;
 
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
@@ -12,6 +13,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -22,10 +27,17 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import java.io.Console;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,11 +55,12 @@ public class MainActivity extends ActionBarActivity
     private static final int BT_VISIVEL = 1;
 
     private static final int TIRAR_FOTO = 0;
+    private static final int RECEBER_FOTO = 1;
     private static final int MSG_DESCONECTOU = 2;
 
     private ThreadServidor mThreadServidor;
     private ThreadCliente mThreadCliente;
-    private ThreadComunicacao mThreadComunicacao;
+    public static ThreadComunicacao mThreadComunicacao;
 
     private BluetoothAdapter mAdaptadorBluetooth;
     private List<BluetoothDevice> mDispositivosEncontrados;
@@ -57,7 +70,7 @@ public class MainActivity extends ActionBarActivity
     private DataInputStream is;
     private DataOutputStream os;
     //atualizará a tela apartir das threads de conexão
-    private TelaHandler mTelaHandler;
+    public static TelaHandler mTelaHandler;
     //informa ao usuário que o processo de conexão está sendo realizado
     private ProgressDialog mAguardeDialog;
 
@@ -180,10 +193,11 @@ public class MainActivity extends ActionBarActivity
         //EditText edt = (EditText) findViewById(R.id.edtMsg);
         //String msg = edt.getText().toString();
         //edt.setText("");
-        String msg = "take_picture";
+        //String msg = "take_picture";
+        String num = "-1";
         try {
             if (os != null) {
-                os.writeUTF(msg);
+                os.write(num.getBytes());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -307,22 +321,49 @@ public class MainActivity extends ActionBarActivity
         }
     }
 
-    private class ThreadComunicacao extends Thread {
+    public class ThreadComunicacao extends Thread {
         String nome;
         BluetoothSocket socket;
 
+        public DataInputStream getInputStream() {
+            return is;
+        }
+
+        public DataOutputStream getOutputStream() {
+            return os;
+        }
+
+        @TargetApi(Build.VERSION_CODES.GINGERBREAD)
         public void run() {
             try {
                 nome = socket.getRemoteDevice().getName();
                 is = new DataInputStream(socket.getInputStream());
                 os =new DataOutputStream(socket.getOutputStream());
-                String string;
+
+                byte[] bufferBytes = new byte[1048576];
+                // necessário criar esse outro buffer para ir adicionando os pacotes de bytes que chegam
+                // já que o array de bytes da foto não chega de uma só vez.
+                byte[] outroBuffer = null;
+
                 while (true) {
-                    string = is.readUTF();
-                    mTelaHandler.obtainMessage(TIRAR_FOTO, nome + ": " + string).sendToTarget();
+                    int result = is.read(bufferBytes);
+                    // se o result for igual a 2, significa que foi enviado um -1.
+                    if ( result == 2 ) {
+                        mTelaHandler.obtainMessage(TIRAR_FOTO).sendToTarget();
+                    } else  {
+                        if (outroBuffer == null) {
+                            outroBuffer = Arrays.copyOfRange(bufferBytes, 0, result);
+                        } else {
+                            // vai adicionando os bytes que vão chegando
+                            byte[] array1and2 = new byte[outroBuffer.length + result];
+                            System.arraycopy(outroBuffer, 0, array1and2, 0, outroBuffer.length);
+                            System.arraycopy(bufferBytes, 0, array1and2, outroBuffer.length, result);
+                            outroBuffer = array1and2;
+                        }
+                        mTelaHandler.obtainMessage(RECEBER_FOTO, outroBuffer).sendToTarget();
+                    }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
                 mTelaHandler.obtainMessage(MSG_DESCONECTOU, "A conexão foi perdida.").sendToTarget();
                 Log.i(TAG, e.getMessage() + "ThreadComunicação: Desconectou.");
             }
@@ -368,20 +409,40 @@ public class MainActivity extends ActionBarActivity
 
             switch (msg.what){
                 case TIRAR_FOTO:
-                    //mMensagens.add(msg.obj.toString());
-                    //mMensagens.notifyDataSetChanged();
-
-                    Toast.makeText(getApplicationContext(), msg.obj.toString(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Dispositivou solicitou tirar foto",
+                            Toast.LENGTH_SHORT).show();
                     CameraActivity.buttonTakePicture.performClick();
+                    break;
+                case RECEBER_FOTO:
+                    Toast.makeText(getApplicationContext(), "VAI RECEBER FOTO",
+                            Toast.LENGTH_SHORT).show();
+                    try {
+                        byte[] fotoBytes = (byte[]) msg.obj;
+                        // renderiza a imagem na tela
+                        ImageView image = (ImageView) findViewById(R.id.showPicture);
+                        Bitmap bMap = BitmapFactory.decodeByteArray(fotoBytes, 0, fotoBytes.length);
+                        image.setImageBitmap(bMap);
 
-                    //CameraActivity.persistImage();
+                        // salva a imagem no storage
+                        File myExternalFile = new File(CameraActivity.getAlbumStorageDir(""), "imagemSalva.jpg");
+                        try {
+                            FileOutputStream fos = new FileOutputStream(myExternalFile);
+                            fos.write(fotoBytes);
+                            fos.close();
+                            Intent mediaScan = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                            mediaScan.setDataAndType(Uri.parse(myExternalFile.getPath()), "image/*");
+                            sendBroadcast(mediaScan);
+                        } catch (IOException e) {
+                            Toast.makeText(getApplicationContext(),
+                                    getString(R.string.erro_save_image), Toast.LENGTH_SHORT);
+                            Log.e("ERRO AO SALVAR ARQUIVO", e.getMessage());
+                        }
 
-
+                    } catch (Exception e) {
+                        Log.d("ERROOR SHOW IMAGE", e.getMessage());
+                    }
 
                     break;
-                //case RECEBER_FOTO:
-                 //   //salvar os bytes da foto na galeria e exibir em um imageview
-                 //   break;
                 case MSG_DESCONECTOU:
                     Toast.makeText(MainActivity.this, getString(R.string.msg_desconectou) + ": " + msg.obj.toString(),
                             Toast.LENGTH_SHORT).show();
