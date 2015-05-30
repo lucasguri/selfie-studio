@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,8 +68,6 @@ public class MainActivity extends ActionBarActivity
     private EventosBluetoothReceiver mEventosBluetoothReceiver;
     private ImageView takePicture;
 
-    private DataInputStream is;
-    private DataOutputStream os;
     //atualizará a tela apartir das threads de conexão
     public static TelaHandler mTelaHandler;
     //informa ao usuário que o processo de conexão está sendo realizado
@@ -190,12 +189,9 @@ public class MainActivity extends ActionBarActivity
 
     //botão enviar - escreve o dado na lista de mensagens
     public void onClick(View v) {
-        //EditText edt = (EditText) findViewById(R.id.edtMsg);
-        //String msg = edt.getText().toString();
-        //edt.setText("");
-        //String msg = "take_picture";
         String num = "-1";
         try {
+            OutputStream os = mThreadComunicacao.getOutputStream();
             if (os != null) {
                 os.write(num.getBytes());
             }
@@ -325,12 +321,19 @@ public class MainActivity extends ActionBarActivity
         String nome;
         BluetoothSocket socket;
 
+        private DataInputStream is;
+        private DataOutputStream os;
+
         public DataInputStream getInputStream() {
             return is;
         }
 
         public DataOutputStream getOutputStream() {
             return os;
+        }
+
+        public BluetoothDevice getDevice() {
+            return socket.getRemoteDevice();
         }
 
         @TargetApi(Build.VERSION_CODES.GINGERBREAD)
@@ -340,27 +343,13 @@ public class MainActivity extends ActionBarActivity
                 is = new DataInputStream(socket.getInputStream());
                 os =new DataOutputStream(socket.getOutputStream());
 
-                byte[] bufferBytes = new byte[1048576];
-                // necessário criar esse outro buffer para ir adicionando os pacotes de bytes que chegam
-                // já que o array de bytes da foto não chega de uma só vez.
-                byte[] outroBuffer = null;
+                byte[] bufferBytes = new byte[1024];
 
                 while (true) {
                     int result = is.read(bufferBytes);
                     // se o result for igual a 2, significa que foi enviado um -1.
                     if ( result == 2 ) {
                         mTelaHandler.obtainMessage(TIRAR_FOTO).sendToTarget();
-                    } else  {
-                        if (outroBuffer == null) {
-                            outroBuffer = Arrays.copyOfRange(bufferBytes, 0, result);
-                        } else {
-                            // vai adicionando os bytes que vão chegando
-                            byte[] array1and2 = new byte[outroBuffer.length + result];
-                            System.arraycopy(outroBuffer, 0, array1and2, 0, outroBuffer.length);
-                            System.arraycopy(bufferBytes, 0, array1and2, outroBuffer.length, result);
-                            outroBuffer = array1and2;
-                        }
-                        mTelaHandler.obtainMessage(RECEBER_FOTO, outroBuffer).sendToTarget();
                     }
                 }
             } catch (IOException e) {
@@ -412,36 +401,6 @@ public class MainActivity extends ActionBarActivity
                     Toast.makeText(getApplicationContext(), "Dispositivou solicitou tirar foto",
                             Toast.LENGTH_SHORT).show();
                     CameraActivity.buttonTakePicture.performClick();
-                    break;
-                case RECEBER_FOTO:
-                    Toast.makeText(getApplicationContext(), "VAI RECEBER FOTO",
-                            Toast.LENGTH_SHORT).show();
-                    try {
-                        byte[] fotoBytes = (byte[]) msg.obj;
-                        // renderiza a imagem na tela
-                        ImageView image = (ImageView) findViewById(R.id.showPicture);
-                        Bitmap bMap = BitmapFactory.decodeByteArray(fotoBytes, 0, fotoBytes.length);
-                        image.setImageBitmap(bMap);
-
-                        // salva a imagem no storage
-                        File myExternalFile = new File(CameraActivity.getAlbumStorageDir(""), "imagemSalva.jpg");
-                        try {
-                            FileOutputStream fos = new FileOutputStream(myExternalFile);
-                            fos.write(fotoBytes);
-                            fos.close();
-                            Intent mediaScan = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                            mediaScan.setDataAndType(Uri.parse(myExternalFile.getPath()), "image/*");
-                            sendBroadcast(mediaScan);
-                        } catch (IOException e) {
-                            Toast.makeText(getApplicationContext(),
-                                    getString(R.string.erro_save_image), Toast.LENGTH_SHORT);
-                            Log.e("ERRO AO SALVAR ARQUIVO", e.getMessage());
-                        }
-
-                    } catch (Exception e) {
-                        Log.d("ERROOR SHOW IMAGE", e.getMessage());
-                    }
-
                     break;
                 case MSG_DESCONECTOU:
                     Toast.makeText(MainActivity.this, getString(R.string.msg_desconectou) + ": " + msg.obj.toString(),
