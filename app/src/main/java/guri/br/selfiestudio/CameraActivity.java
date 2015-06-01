@@ -2,9 +2,6 @@ package guri.br.selfiestudio;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.bluetooth.BluetoothDevice;
-import android.content.ComponentName;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
@@ -81,12 +78,12 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
             }});
     }
 
-    /*protected void onPause() {
+    protected void onPause() {
         super.onPause();
-        releaseCamera();
+        //MainActivity.paraTudo();
     }
 
-    private void releaseCamera(){
+    /*private void releaseCamera(){
         if (camera != null){
             camera.release();
             //camera = null;
@@ -112,54 +109,46 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
 
         @Override
         public void onPictureTaken(byte[] arg0, Camera arg1) {
-            if (StorageHelper.isExternalStorageWritable()) {
-                File f = StorageHelper.getAlbumStorageDir("");
+            Bitmap bitmap = BitmapFactory.decodeByteArray(arg0, 0, arg0.length);
+            if (isExternalStorageWritable()) {
+                File f = getAlbumStorageDir("");
                 File myExternalFile = new File(f, "teste3.jpg");
                 try {
                     // salvando a foto no storage
                     FileOutputStream fos = new FileOutputStream(myExternalFile);
                     fos.write(arg0);
                     fos.close();
-
-                    // abrindo o dialog pra selecionar o dispositivo para onde será enviada a foto
-                    sendFileToDevice();
-
+                    Intent mediaScan = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                    mediaScan.setDataAndType(Uri.parse(myExternalFile.getPath()), "image/*");
+                    sendBroadcast(mediaScan);
+                    // escrevendo o array de bytes da foto pelo outputstream
+                    DataOutputStream os = MainActivity.mThreadComunicacao.getOutputStream();
+                    os.write(arg0);
                 } catch (IOException e) {
+                    Toast.makeText(getApplicationContext(),
+                            getString(R.string.erro_save_image), Toast.LENGTH_SHORT);
                     Log.e("ERRO AO SALVAR ARQUIVO", e.getMessage());
                 }
             }
         }};
 
-    /**
-     * Abre um popup para selecionar o dispositivo ao qual será enviada a foto.
-     */
-    public void sendFileToDevice() {
+    public boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
 
-        File f = StorageHelper.getAlbumStorageDir("");
-        File myFile = new File(f, "teste3.jpg");
-
-        Intent intent = new Intent(android.content.Intent.ACTION_SEND);
-        intent.setType("image/*");
-        intent.setComponent(new ComponentName("com.android.bluetooth", "com.android.bluetooth.opp.BluetoothOppLauncherActivity"));
-
-        //Log.d("DEVICEEEEEEE", MainActivity.mThreadComunicacao.getDevice().getName());
-        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(myFile));
-        startActivity(intent);
-
-        /**
-         * Esse código pode ser substituido pelo de cima, e não vai abrir o popup para selecionar o dispositivo,
-         * vai mandar diretamente.
-         * FUNCIONAA somente para versões do android abaixo de 4.1  :(
-        BluetoothDevice device = MainActivity.mThreadComunicacao.getDevice();
-        ContentValues values = new ContentValues();
-        String address = device.getAddress();
-        values.put(BluetoothShare.URI, Uri.fromFile(myFile).toString());
-        values.put(BluetoothShare.DESTINATION, address);
-        values.put(BluetoothShare.DIRECTION, BluetoothShare.DIRECTION_OUTBOUND);
-        Long ts = System.currentTimeMillis();
-        values.put(BluetoothShare.TIMESTAMP, ts);
-        Uri contentUri = getContentResolver().insert(BluetoothShare.CONTENT_URI, values);
-         */
+    @TargetApi(Build.VERSION_CODES.FROYO)
+    public static File getAlbumStorageDir(String albumName) {
+        // Get the directory for the user's public pictures directory.
+        File file = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES), albumName);
+        if (!file.mkdirs()) {
+            Log.e("DIRECTORYYY", "Directory not created");
+        }
+        return file;
     }
 
     @Override
@@ -193,11 +182,17 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
     public void surfaceDestroyed(SurfaceHolder holder) {
         // TODO Auto-generated method stub
         //if (camera != null) {
-            camera.stopPreview();
-            camera.release();
-            camera = null;
+        camera.stopPreview();
+        camera.release();
+        camera = null;
         //}
 
         previewing = false;
+    }
+
+    @Override
+    public void onBackPressed() {
+        MainActivity.paraTudo();
+        super.onBackPressed();
     }
 }
