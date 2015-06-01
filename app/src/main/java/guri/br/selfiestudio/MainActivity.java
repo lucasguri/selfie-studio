@@ -239,7 +239,7 @@ public class MainActivity extends Activity
         //EditText edt = (EditText) findViewById(R.id.edtMsg);
         //String msg = edt.getText().toString();
         //edt.setText("");
-        //String msg = "take_picture";
+        //String msg = "picture";
         String num = "-1";
         try {
             if (os != null) {
