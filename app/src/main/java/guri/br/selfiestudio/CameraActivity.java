@@ -122,8 +122,10 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                     mediaScan.setDataAndType(Uri.parse(myExternalFile.getPath()), "image/*");
                     sendBroadcast(mediaScan);
                     // escrevendo o array de bytes da foto pelo outputstream
-                    DataOutputStream os = MainActivity.mThreadComunicacao.getOutputStream();
-                    os.write(arg0);
+                    if (MainActivity.mThreadComunicacao != null){
+                        DataOutputStream os = MainActivity.mThreadComunicacao.getOutputStream();
+                        os.write(arg0);
+                    }
                 } catch (IOException e) {
                     Toast.makeText(getApplicationContext(),
                             getString(R.string.erro_save_image), Toast.LENGTH_SHORT);
