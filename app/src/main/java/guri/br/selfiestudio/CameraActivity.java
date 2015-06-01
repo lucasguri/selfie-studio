@@ -34,6 +34,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class CameraActivity extends Activity implements SurfaceHolder.Callback {
 
@@ -112,8 +114,9 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
         public void onPictureTaken(byte[] arg0, Camera arg1) {
             Bitmap bitmap = BitmapFactory.decodeByteArray(arg0, 0, arg0.length);
             if (isExternalStorageWritable()) {
+                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
                 File f = getAlbumStorageDir("SelfieStudio");
-                File myExternalFile = new File(f, "teste3.jpg");
+                File myExternalFile = new File(f, "SS_" + timeStamp + ".jpg");
                 try {
                     // salvando a foto no storage
                     FileOutputStream fos = new FileOutputStream(myExternalFile);

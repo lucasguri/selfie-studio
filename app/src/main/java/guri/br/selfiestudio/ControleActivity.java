@@ -19,6 +19,8 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Created by Lucas on 26/05/2015.
@@ -82,7 +84,8 @@ public class ControleActivity extends Activity{
                         image.setImageBitmap(bMap);
 
                         // salva a imagem no storage
-                        File myExternalFile = new File(CameraActivity.getAlbumStorageDir("SelfieStudio"), "imagemSalva.jpg");
+                        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                        File myExternalFile = new File(CameraActivity.getAlbumStorageDir("SelfieStudio"), "SS_" + timeStamp + ".jpg");
                         try {
                             FileOutputStream fos = new FileOutputStream(myExternalFile);
                             fos.write(fotoBytes);
