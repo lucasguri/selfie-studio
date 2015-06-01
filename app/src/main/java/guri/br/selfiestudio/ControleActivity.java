@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -72,8 +73,7 @@ public class ControleActivity extends Activity{
                     CameraActivity.buttonTakePicture.performClick();
                     break;
                 case RECEBER_FOTO:
-                    Toast.makeText(getApplicationContext(), "VAI RECEBER FOTO",
-                            Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getApplicationContext(), "VAI RECEBER FOTO",Toast.LENGTH_SHORT).show();
                     try {
                         byte[] fotoBytes = (byte[]) msg.obj;
                         // renderiza a imagem na tela
@@ -82,14 +82,22 @@ public class ControleActivity extends Activity{
                         image.setImageBitmap(bMap);
 
                         // salva a imagem no storage
-                        File myExternalFile = new File(CameraActivity.getAlbumStorageDir(""), "imagemSalva.jpg");
+                        File myExternalFile = new File(CameraActivity.getAlbumStorageDir("SelfieStudio"), "imagemSalva.jpg");
                         try {
                             FileOutputStream fos = new FileOutputStream(myExternalFile);
                             fos.write(fotoBytes);
                             fos.close();
-                            Intent mediaScan = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                            /*Intent mediaScan = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                             mediaScan.setDataAndType(Uri.parse(myExternalFile.getPath()), "image/*");
-                            sendBroadcast(mediaScan);
+                            sendBroadcast(mediaScan);*/
+                            MediaScannerConnection.scanFile(getApplicationContext(),
+                                    new String[]{myExternalFile.toString()}, null,
+                                    new MediaScannerConnection.OnScanCompletedListener() {
+                                        public void onScanCompleted(String path, Uri uri) {
+                                            Log.i("ExternalStorage", "Scanned " + path + ":");
+                                            Log.i("ExternalStorage", "-> uri=" + uri);
+                                        }
+                                    });
                         } catch (IOException e) {
                             Toast.makeText(getApplicationContext(),
                                     getString(R.string.erro_save_image), Toast.LENGTH_SHORT);

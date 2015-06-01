@@ -210,10 +210,17 @@ public class MainActivity extends Activity
             aparelhos[i] = mDispositivosEncontrados.get(i).getName();
         }
 
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle(R.string.aparelhos_encontrados)
-                .setSingleChoiceItems(aparelhos, -1, this)
-                .create();
+        AlertDialog dialog;
+        if(mDispositivosEncontrados.size()<1){
+            dialog = new AlertDialog.Builder(this)
+                    .setMessage("Nenhum dispositivo Bluetooth encontrado")
+                    .create();
+        } else{
+            dialog = new AlertDialog.Builder(this)
+                    .setTitle(R.string.aparelhos_encontrados)
+                    .setSingleChoiceItems(aparelhos, -1, this)
+                    .create();
+        }
         dialog.show();
     }
 

@@ -23,8 +23,10 @@ public class StorageHelper {
     @TargetApi(Build.VERSION_CODES.FROYO)
     public static File getAlbumStorageDir(String albumName) {
         // Get the directory for the user's public pictures directory.
-        File file = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), albumName);
+        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
+                +File.separator
+                + albumName
+                + File.separator);
         if (!file.mkdirs()) {
             Log.e("DIRECTORYYY", "Directory not created");
         }

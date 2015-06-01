@@ -12,6 +12,7 @@ import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.ShutterCallback;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -71,7 +72,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
             public void onClick(View arg0) {
                 // TODO Auto-generated method stub
                 Camera.Parameters p = camera.getParameters();
-                p.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
+                p.setFlashMode(Camera.Parameters.FLASH_MODE_AUTO);
                 camera.setParameters(p);
                 camera.takePicture(myShutterCallback,
                         myPictureCallback_RAW, myPictureCallback_JPG);
@@ -111,16 +112,24 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
         public void onPictureTaken(byte[] arg0, Camera arg1) {
             Bitmap bitmap = BitmapFactory.decodeByteArray(arg0, 0, arg0.length);
             if (isExternalStorageWritable()) {
-                File f = getAlbumStorageDir("");
+                File f = getAlbumStorageDir("SelfieStudio");
                 File myExternalFile = new File(f, "teste3.jpg");
                 try {
                     // salvando a foto no storage
                     FileOutputStream fos = new FileOutputStream(myExternalFile);
                     fos.write(arg0);
                     fos.close();
-                    Intent mediaScan = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                    /*Intent mediaScan = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                     mediaScan.setDataAndType(Uri.parse(myExternalFile.getPath()), "image/*");
-                    sendBroadcast(mediaScan);
+                    sendBroadcast(mediaScan);*/
+                    MediaScannerConnection.scanFile(getApplicationContext(),
+                            new String[]{myExternalFile.toString()}, null,
+                            new MediaScannerConnection.OnScanCompletedListener() {
+                                public void onScanCompleted(String path, Uri uri) {
+                                    Log.i("ExternalStorage", "Scanned " + path + ":");
+                                    Log.i("ExternalStorage", "-> uri=" + uri);
+                                }
+                            });
                     // escrevendo o array de bytes da foto pelo outputstream
                     DataOutputStream os = MainActivity.mThreadComunicacao.getOutputStream();
                     os.write(arg0);
