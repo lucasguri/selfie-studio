@@ -122,6 +122,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                     FileOutputStream fos = new FileOutputStream(myExternalFile);
                     fos.write(arg0);
                     fos.close();
+
                     /*Intent mediaScan = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                     mediaScan.setDataAndType(Uri.parse(myExternalFile.getPath()), "image/*");
                     sendBroadcast(mediaScan);*/
@@ -138,6 +139,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                         DataOutputStream os = MainActivity.mThreadComunicacao.getOutputStream();
                         os.write(arg0);
                     }
+
                 } catch (IOException e) {
                     Toast.makeText(getApplicationContext(),
                             getString(R.string.erro_save_image), Toast.LENGTH_SHORT);
@@ -190,6 +192,11 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
     public void surfaceCreated(SurfaceHolder holder) {
         // TODO Auto-generated method stub
         camera = Camera.open();
+        Camera.Parameters parameters = camera.getParameters();
+        parameters.set("jpeg-quality", 70);
+        parameters.setPictureFormat(PixelFormat.JPEG);
+        parameters.setPictureSize(2048, 1232);
+        camera.setParameters(parameters);
     }
 
     @Override
