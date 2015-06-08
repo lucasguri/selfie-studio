@@ -28,6 +28,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -136,8 +137,18 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                             });
                     // escrevendo o array de bytes da foto pelo outputstream
                     if (MainActivity.mThreadComunicacao != null){
+                        BitmapFactory bitmapFactory = new BitmapFactory();
+                        BitmapFactory.Options options = new BitmapFactory.Options();
+                        options.inJustDecodeBounds = false;
+                        options.inSampleSize = 4;
+                        Bitmap image = bitmapFactory.decodeByteArray(arg0, 0, arg0.length, options);
+
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        image.compress(Bitmap.CompressFormat.JPEG, 60, stream);
+                        byte[] imageBytes = stream.toByteArray();
+
                         DataOutputStream os = MainActivity.mThreadComunicacao.getOutputStream();
-                        os.write(arg0);
+                        os.write(imageBytes);
                     }
 
                 } catch (IOException e) {
@@ -192,11 +203,11 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
     public void surfaceCreated(SurfaceHolder holder) {
         // TODO Auto-generated method stub
         camera = Camera.open();
-        Camera.Parameters parameters = camera.getParameters();
-        parameters.set("jpeg-quality", 70);
-        parameters.setPictureFormat(PixelFormat.JPEG);
-        parameters.setPictureSize(2048, 1232);
-        camera.setParameters(parameters);
+        //Camera.Parameters parameters = camera.getParameters();
+        //parameters.set("jpeg-quality", 70);
+        //parameters.setPictureFormat(PixelFormat.JPEG);
+        //parameters.setPictureSize(2048, 1232);
+        //camera.setParameters(parameters);
     }
 
     @Override
