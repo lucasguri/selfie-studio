@@ -124,6 +124,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                     fos.write(arg0);
                     fos.close();
 
+
                     /*Intent mediaScan = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                     mediaScan.setDataAndType(Uri.parse(myExternalFile.getPath()), "image/*");
                     sendBroadcast(mediaScan);*/
@@ -140,15 +141,31 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                         BitmapFactory bitmapFactory = new BitmapFactory();
                         BitmapFactory.Options options = new BitmapFactory.Options();
                         options.inJustDecodeBounds = false;
-                        options.inSampleSize = 4;
+                        options.inSampleSize = 8;
                         Bitmap image = bitmapFactory.decodeByteArray(arg0, 0, arg0.length, options);
 
                         ByteArrayOutputStream stream = new ByteArrayOutputStream();
                         image.compress(Bitmap.CompressFormat.JPEG, 60, stream);
                         byte[] imageBytes = stream.toByteArray();
 
+                        //int tamanhoDaImagem = imageBytes.length;
+                        byte[] oneByte = new byte[1];
+
                         DataOutputStream os = MainActivity.mThreadComunicacao.getOutputStream();
-                        os.write(imageBytes);
+                        //os.write(tamanhoDaImagem);
+                        synchronized (os){os.write(imageBytes);}
+                        //Envia um byte para sinalizar o fim da transferência da imagem.
+                        try {
+                            MainActivity.mThreadComunicacao.wait(2000);
+                        } catch (Exception e){
+
+                        }
+                        synchronized (os){os.write(oneByte);}
+
+                        camera.stopPreview();
+                        camera.startPreview();
+
+                        //os.write(oneByte);
                     }
 
                 } catch (IOException e) {

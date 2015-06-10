@@ -392,13 +392,21 @@ public class MainActivity extends Activity
                 // necessário criar esse outro buffer para ir adicionando os pacotes de bytes que chegam
                 // já que o array de bytes da foto não chega de uma só vez.
                 byte[] outroBuffer = null;
+                int tamanhoDaImagem = 0;
 
                 while (true) {
+                    //if (outroBuffer != null && outroBuffer.length == tamanhoDaImagem){
+                    //    ControleActivity.mTelaHandler.obtainMessage(RECEBER_FOTO, outroBuffer).sendToTarget();
+                    //    tamanhoDaImagem = 0;
+                    //}
                     int result = is.read(bufferBytes);
                     // se o result for igual a 2, significa que foi enviado um -1.
                     if ( result == 2 ) {
                         mTelaHandler.obtainMessage(TIRAR_FOTO).sendToTarget();
                     } else  {
+                        //if (tamanhoDaImagem == 0){
+                        //    tamanhoDaImagem = converteBytesEmInt(bufferBytes);
+                        //}
                         if (outroBuffer == null) {
                             outroBuffer = Arrays.copyOfRange(bufferBytes, 0, result);
                         } else {
@@ -408,7 +416,9 @@ public class MainActivity extends Activity
                             System.arraycopy(bufferBytes, 0, array1and2, outroBuffer.length, result);
                             outroBuffer = array1and2;
                         }
-                        ControleActivity.mTelaHandler.obtainMessage(RECEBER_FOTO, outroBuffer).sendToTarget();
+                        if (result == 1){
+                            ControleActivity.mTelaHandler.obtainMessage(RECEBER_FOTO, outroBuffer).sendToTarget();
+                        }
                     }
                 }
             } catch (IOException e) {
@@ -498,6 +508,16 @@ public class MainActivity extends Activity
                     break;
             }
         }
+    }
+
+    public int converteBytesEmInt(byte[] b){
+        int MASK = 0xFF;
+        int result = 0;
+        result = b[0] & MASK;
+        result = result + ((b[1] & MASK) << 8);
+        result = result + ((b[2] & MASK) << 16);
+        result = result + ((b[3] & MASK) << 24);
+        return result;
     }
 
 }
