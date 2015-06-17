@@ -1,0 +1,81 @@
+apply plugin: 'pmd'
+apply plugin: 'checkstyle'
+apply plugin: 'findbugs'
+
+check.dependsOn 'pmd', 'checkstyle', 'findbugs'
+
+task pmd(type: Pmd) {
+    ruleSetFiles = files("${project.rootDir}/app/config/quality/pmd/ruleset.xml")
+    ignoreFailures = true
+    ruleSets = ["java-basic", "java-braces", "java-strings"]
+
+    source 'src'
+    include '**/*.java'
+    exclude '**/gen/**'
+
+    reports {
+        xml.enabled = true
+        html.enabled = false
+        xml {
+            destination "$project.buildDir/outputs/reports/pmd/pmd.xml"
+        }
+        html {
+            destination "$project.buildDir/outputs/reports/pmd/pmd.html"
+        }
+    }
+}
+
+task checkstyle(type: Checkstyle) {
+    configFile file("${project.rootDir}/app/config/quality/checkstyle/checkstyle.xml")
+    configProperties.checkstyleSuppressionsPath = file("${project.rootDir}/app/config/quality/checkstyle/suppressions.xml").absolutePath
+
+    ignoreFailures = true
+    showViolations = false
+
+    source 'src'
+    include '**/*.java'
+    exclude '**/gen/**'
+
+    reports {
+        xml.enabled = true
+
+        xml {
+            destination "$project.buildDir/outputs/reports/checkstyle/checkstyle.xml"
+        }
+    }
+    classpath = files()
+}
+
+task findbugs(type: FindBugs) {
+    ignoreFailures = true
+    effort = "max"
+    reportLevel = "high"
+    excludeFilter = new File("${project.rootDir}/app/config/quality/findbugs/findbugs-filter.xml")
+    classes = files("${project.rootDir}/app/build/intermediates/classes")
+    source 'src'
+    include '**/*.java'
+    exclude '**/gen/**'
+    reports {
+        xml.enabled = true
+        html.enabled = false
+
+        xml {
+            destination "$project.buildDir/outputs/reports/findbugs/findbugs.xml"
+        }
+        html {
+            destination "$project.buildDir/outputs/reports/findbugs/findbugs.html"
+        }
+    }
+    classpath = files()
+}
+
+android {
+    lintOptions {
+        abortOnError false
+        lintConfig file("${project.rootDir}/app/config/quality/lint/lint.xml")
+        htmlReport true
+        htmlOutput file("$project.buildDir/outputs/reports/lint/lint.html")
+        xmlReport true
+        xmlOutput file("$project.buildDir/outputs/reports/lint/lint.xml")
+    }
+}
