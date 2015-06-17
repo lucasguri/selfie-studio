@@ -418,6 +418,8 @@ public class MainActivity extends Activity
                         }
                         if (result == 1){
                             ControleActivity.mTelaHandler.obtainMessage(RECEBER_FOTO, outroBuffer).sendToTarget();
+                            bufferBytes = new byte[1048576];
+                            outroBuffer = null;
                         }
                     }
                 }
