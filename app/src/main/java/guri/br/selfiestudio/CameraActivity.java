@@ -156,7 +156,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                         synchronized (os){os.write(imageBytes);}
                         //Envia um byte para sinalizar o fim da transferência da imagem.
                         try {
-                            MainActivity.mThreadComunicacao.wait(2000);
+                            os.wait();
                         } catch (Exception e){
 
                         }
