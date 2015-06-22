@@ -17,6 +17,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
@@ -155,11 +156,8 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                         //os.write(tamanhoDaImagem);
                         synchronized (os){os.write(imageBytes);}
                         //Envia um byte para sinalizar o fim da transferência da imagem.
-                        try {
-                            os.wait();
-                        } catch (Exception e){
+                        SystemClock.sleep(1000);
 
-                        }
                         synchronized (os){os.write(oneByte);}
 
                         camera.stopPreview();
