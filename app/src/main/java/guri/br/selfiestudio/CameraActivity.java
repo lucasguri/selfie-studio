@@ -146,10 +146,10 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                         //Bitmap image = bitmapFactory.decodeByteArray(arg0, 0, arg0.length, options);
 
                         //
-                        Bitmap image = decodeSampledBitmapFromByteArray(arg0, 1136, 640);
+                        Bitmap image = decodeSampledBitmapFromByteArray(arg0, 1520, 960);
 
                         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                        image.compress(Bitmap.CompressFormat.JPEG, 60, stream);
+                        image.compress(Bitmap.CompressFormat.JPEG, 70, stream);
                         byte[] imageBytes = stream.toByteArray();
 
                         //int tamanhoDaImagem = imageBytes.length;
@@ -159,7 +159,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                         //os.write(tamanhoDaImagem);
                         synchronized (os){os.write(imageBytes);}
                         //Envia um byte para sinalizar o fim da transferência da imagem.
-                        SystemClock.sleep(1000);
+                        SystemClock.sleep(2000);
 
                         synchronized (os){os.write(oneByte);}
 
@@ -177,8 +177,9 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
             }
         }};
 
-    public static int calculateInSampleSize(
-            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+    public static int calculateInSampleSize(BitmapFactory.Options options,
+                                            int reqWidth, int reqHeight) {
+        // BEGIN_INCLUDE (calculate_sample_size)
         // Raw height and width of image
         final int height = options.outHeight;
         final int width = options.outWidth;
@@ -195,9 +196,25 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback {
                     && (halfWidth / inSampleSize) > reqWidth) {
                 inSampleSize *= 2;
             }
-        }
 
+            // This offers some additional logic in case the image has a strange
+            // aspect ratio. For example, a panorama may have a much larger
+            // width than height. In these cases the total pixels might still
+            // end up being too large to fit comfortably in memory, so we should
+            // be more aggressive with sample down the image (=larger inSampleSize).
+
+            long totalPixels = width * height / inSampleSize;
+
+            // Anything more than 2x the requested pixels we'll sample down further
+            final long totalReqPixelsCap = reqWidth * reqHeight * 2;
+
+            while (totalPixels > totalReqPixelsCap) {
+                inSampleSize *= 2;
+                totalPixels /= 2;
+            }
+        }
         return inSampleSize;
+        // END_INCLUDE (calculate_sample_size)
     }
 
     public static Bitmap decodeSampledBitmapFromByteArray(byte[] bytes, int reqWidth, int reqHeight) {
