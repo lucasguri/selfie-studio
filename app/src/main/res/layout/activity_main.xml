@@ -3,7 +3,7 @@
         android:layout_width="match_parent"
         android:orientation="vertical"
         android:gravity="center"
-        android:background="@drawable/main_background">
+        android:background="@drawable/main_background14">
 
     <ImageView
         android:layout_width="match_parent"
@@ -12,12 +12,12 @@
         android:id="@+id/imageView"
         android:layout_centerVertical="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:visibility="visible"/>
     <Button
         android:id="@+id/camera_mode"
-        android:layout_width="150dp"
-        android:layout_height="150dp"
-        style="?android:attr/borderlessButtonStyle"
+        android:layout_width="180dp"
+        android:layout_height="180dp"
         android:background="@drawable/camera_mode_button_custom"
         android:layout_alignTop="@+id/imageView"
         android:layout_centerHorizontal="true" />
@@ -31,16 +31,14 @@
         android:textColor="#ffffff"
         android:gravity="center"
         android:id="@+id/textView"
-        android:layout_below="@+id/camera_mode"
+        android:layout_centerVertical="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="39dp" />
+        android:layout_alignParentStart="true" />
 
     <Button
         android:id="@+id/remote_mode"
-        android:layout_width="150dp"
-        android:layout_height="150dp"
-        style="?android:attr/borderlessButtonStyle"
+        android:layout_width="180dp"
+        android:layout_height="180dp"
         android:background="@drawable/remote_mode_button_custom"
         android:layout_alignBottom="@+id/imageView"
         android:layout_centerHorizontal="true" />

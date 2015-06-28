@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId "guri.br.selfiestudio"
-        minSdkVersion 18
+        minSdkVersion 10
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
